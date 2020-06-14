@@ -5,53 +5,39 @@ class ProductTable extends React.Component {
         super(props);
 
         this.state = {
-            inputValue: '',
+            searchValue: '',
             showOnlyInStock: false,
-            data: props.data
         };
-
-        this.allData = props.data;
-        this.searchedPool = props.data; 
 
         this.handleInputOnChange = this.handleInputOnChange.bind(this);
         this.handleCheckboxOnChange = this.handleCheckboxOnChange.bind(this);
     }
 
     handleInputOnChange(event) {
-        this.searchedPool = event.target.value !== '' ? this.getSearchedProducts() : this.allData;
-
         this.setState({
-            inputValue: event.target.value,
-            data: this.searchedPool 
+            searchValue: event.target.value,
         });
     }
 
     handleCheckboxOnChange(event) {
         this.setState({
             showOnlyInStock: event.target.checked,
-            data: event.target.checked ? this.getStockedProducts() : this.searchedPool 
         });
-    }
-
-    getStockedProducts() {
-        return this.searchedPool.filter(obj => obj.stocked);
-    }
-
-    getSearchedProducts() {
-        return this.allData.filter(obj => obj.name.toLowerCase()
-            .includes(this.state.inputValue.toLowerCase()));
     }
 
     render() {
         return (
             <div className="product-table">
                 <ProductTableSearch 
-                    inputValue={ this.state.inputValue } 
+                    searchValue={ this.state.searchValue } 
                     onInputChange={ this.handleInputOnChange }
                     showOnlyInStock={ this.state.showOnlyInStock }
                     onCheckboxChange={ this.handleCheckboxOnChange }/>
                 
-                <ProductTableBody data={ this.state.data } />
+                <ProductTableBody 
+                    data={ this.props.data }
+                    searchValue={ this.state.searchValue }
+                    showOnlyInStock={ this.state.showOnlyInStock }/>
             </div>
         )
     }
@@ -62,7 +48,7 @@ const ProductTableSearch = (props) => {
         <div className="product-table-search">
            <div className="input-block">
                <input type="text" placeholder="Search" 
-                    value={ props.inputValue }
+                    value={ props.searchValue }
                     onChange={ props.onInputChange } />
            </div> 
            
@@ -78,9 +64,15 @@ const ProductTableSearch = (props) => {
 }
 
 const ProductTableBody = (props) => {
+    let data = props.data.filter(obj => obj.name.toLowerCase().includes(props.searchValue));
+
+    if (props.showOnlyInStock) {
+        data = data.filter(obj => obj.stocked);
+    }
+
     let organizedData = {};
 
-    props.data.forEach(obj => {
+    data.forEach(obj => {
         if (!organizedData[obj.category]) {
             organizedData[obj.category] = [];
         }
